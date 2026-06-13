@@ -1,5 +1,3 @@
 package frc.robot.subsystems.shooter.lifter;
 
-public class LifterIOSim implements LifterIO {
-    
-}
+public class LifterIOSim implements LifterIO {}
