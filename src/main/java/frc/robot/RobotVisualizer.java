@@ -31,17 +31,17 @@ public class RobotVisualizer {
     this.backLiftHeightSupplier = backLiftHeightSupplier;
   }
 
-  public static final Translation3d TURRET_PIVOT_ZERO = new Translation3d(0.438150, 0, 0.694512);
-  public static final Translation3d HOOD_ZERO = new Translation3d(-0.118910, 0, 0.694512);
-  public static final Translation3d INTAKE_ZERO = new Translation3d(-0.057320, 0, 0.308996);
+  public static final Translation3d TURRET_PIVOT_ZERO = new Translation3d(-0.438150, 0, 0.694512);
+  public static final Translation3d HOOD_ZERO = new Translation3d(0.118910, 0, 0.694512);
+  public static final Translation3d INTAKE_ZERO = new Translation3d(0.057320, 0, 0.308996);
   public static final Translation3d EXPANDING_FLOOR_PIVOT_ZERO =
-      new Translation3d(0.080264, 0, 0.204390);
+      new Translation3d(-0.080264, 0, 0.204390);
   public static final double MAX_LIFT_HEIGHT = Units.inchesToMeters(17.75);
   public static final double MAX_HORIZONTAL_HOPPER_EXTENSION = Units.inchesToMeters(12);
   public static final double MAX_VERTICAL_HOPPER_EXTENSION = Units.inchesToMeters(9);
-  public static final double LAUNCHER_FRONT_PIVOT_POINT = -0.186314098902; // meters
+  public static final double LAUNCHER_FRONT_PIVOT_POINT = 0.186314098902; // meters
   public static final double LAUNCHER_PIVOT_LENGTH =
-      TURRET_PIVOT_ZERO.getX() - LAUNCHER_FRONT_PIVOT_POINT;
+      LAUNCHER_FRONT_PIVOT_POINT - TURRET_PIVOT_ZERO.getX();
 
   public void periodic() {
     double turretYaw = turretAngleSupplier.getAsDouble();
@@ -64,12 +64,12 @@ public class RobotVisualizer {
     double backLowerZOffset = -(MAX_LIFT_HEIGHT - Math.max(backVertExt, MAX_LIFT_HEIGHT / 2.));
 
     double horizontalExtension =
-        MAX_HORIZONTAL_HOPPER_EXTENSION
-            - Math.max(0, MAX_HORIZONTAL_HOPPER_EXTENSION * Math.cos(intakeAngle));
+        -(MAX_HORIZONTAL_HOPPER_EXTENSION
+            - Math.max(0, MAX_HORIZONTAL_HOPPER_EXTENSION * Math.cos(intakeAngle)));
     double verticalExtension =
         -(MAX_LIFT_HEIGHT - Math.max(frontVertExt, MAX_VERTICAL_HOPPER_EXTENSION));
 
-    double launcherAngle = -(backVertExt - frontVertExt) / LAUNCHER_PIVOT_LENGTH;
+    double launcherAngle = (backVertExt - frontVertExt) / LAUNCHER_PIVOT_LENGTH;
 
     Transform3d turretBase =
         new Transform3d(
@@ -79,12 +79,12 @@ public class RobotVisualizer {
         turretBase.plus(
             new Transform3d(TURRET_PIVOT_ZERO.unaryMinus(), new Rotation3d(0, 0, -turretYaw)));
     Transform3d hood =
-        turretRotary.plus(new Transform3d(HOOD_ZERO, new Rotation3d(0, -hoodAngle, 0)));
+        turretRotary.plus(new Transform3d(HOOD_ZERO, new Rotation3d(0, hoodAngle, 0)));
 
-    Transform3d intake = new Transform3d(INTAKE_ZERO, new Rotation3d(0, intakeAngle, 0));
+    Transform3d intake = new Transform3d(INTAKE_ZERO, new Rotation3d(0, -intakeAngle, 0));
 
     Transform3d floorPivot =
-        new Transform3d(EXPANDING_FLOOR_PIVOT_ZERO, new Rotation3d(0, floorAngle, 0));
+        new Transform3d(EXPANDING_FLOOR_PIVOT_ZERO, new Rotation3d(0, -floorAngle, 0));
 
     Transform3d horizontalHopper =
         new Transform3d(new Translation3d(horizontalExtension, 0, 0), Rotation3d.kZero);

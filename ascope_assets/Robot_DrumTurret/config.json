@@ -8,7 +8,7 @@
     },
     {
       "axis": "z",
-      "degrees": 270
+      "degrees": 90
     }
   ],
   "position": [
@@ -26,11 +26,11 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
-        -0.438150,
+        0.438150,
         0,
         -0.694512
       ]
@@ -43,7 +43,7 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -60,11 +60,11 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
-        0.118910,
+        -0.118910,
         0,
         -0.694512
       ]
@@ -77,11 +77,11 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
-        0.057320,
+        -0.057320,
         0,
         -0.308996
       ]
@@ -94,11 +94,11 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
-        -0.080264,
+        0.080264,
         0,
         -0.204390
       ]
@@ -111,7 +111,7 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -128,7 +128,7 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -145,7 +145,7 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -162,7 +162,7 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -179,7 +179,7 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -196,7 +196,7 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -213,7 +213,7 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -230,7 +230,7 @@
         },
         {
           "axis": "z",
-          "degrees": 270
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
