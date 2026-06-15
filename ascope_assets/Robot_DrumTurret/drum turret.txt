@@ -1,0 +1,17 @@
+6/14 block cad export
+
+file name	mechanism name
+model 	 = 	stationary (drivetrain, etc.)
+model_0  = 	turret base
+model_1  =	turret rotary (launcher rollers)
+model_2  =	hood
+model_3  =	intake
+model_4  = 	expanding floor pivot
+model_5  = 	horizontal hopper
+model_6  = 	vertical hopper
+model_7  = 	diagonal hopper
+model_8  =	front lift upper
+model_9  = 	front lift lower
+model_10 = 	back lift upper
+model_11 =	back lift lower
+model_12 =	stationary part of hopper
