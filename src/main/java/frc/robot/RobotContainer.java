@@ -39,6 +39,8 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
+  public final RobotVisualizer visualizer;
+
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -120,6 +122,16 @@ public class RobotContainer {
 
     // Configure the button bindings
     configureButtonBindings();
+
+    visualizer =
+        new RobotVisualizer(
+            () -> 0, // replace with turret angle supp
+            () -> 0, // replace with hood angle supp
+            () -> 0, // replace with intake angle supp
+            () -> 0, // replace with floor angle supp
+            () -> 0, // replace with front lifts height supp
+            () -> RobotVisualizer.MAX_LIFT_HEIGHT // replace with back lift height supp
+            );
   }
 
   /**
