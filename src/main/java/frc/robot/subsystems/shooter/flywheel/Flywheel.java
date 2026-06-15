@@ -5,9 +5,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.shooter.physicsModel.BallisticCalculator;
-
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;

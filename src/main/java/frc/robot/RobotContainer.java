@@ -24,6 +24,7 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.util.PhoenixUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -119,6 +120,8 @@ public class RobotContainer {
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
+    PhoenixUtil.startTelemetry();
+
     configureButtonBindings();
   }
 
