@@ -1,7 +1,10 @@
+// Copyright (c) DrumTurret project contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the BSD license file in the root of this project.
+
 package frc.robot.subsystems.shooter.physicsModel;
 
 public final class BallisticShooterSystem {
-
   public record FullResult(
       ShooterPhysics.ShotResult shot, BallisticCalculator.TrajectoryResult trajectory) {}
 
@@ -15,7 +18,6 @@ public final class BallisticShooterSystem {
       double launchAngleRad,
       double shooterHeight,
       double Cd) {
-
     // 1. Shooter exit model
     var shot =
         ShooterPhysics.calculateShot(

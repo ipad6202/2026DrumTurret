@@ -15,7 +15,6 @@ Required packages:
 - sleipnirgroup-jormungandr
 """
 
-import json
 import math
 
 import numpy as np
@@ -96,7 +95,6 @@ def add(
     distance,
     target_height,
     last_solve=None,
-
 ):
     """
     Solve for minimum velocity.
@@ -129,7 +127,9 @@ def add(
     T = problem.decision_variable()
     problem.subject_to(T >= 0)
     if last_solve is None:
-        T.set_value(math.hypot(distance, target_height - shooter_height) / max_shooter_velocity)
+        T.set_value(
+            math.hypot(distance, target_height - shooter_height) / max_shooter_velocity
+        )
     else:
         T.set_value(last_solve[2].value())
     dt = T / N
@@ -143,6 +143,8 @@ def add(
     #     [y velocity]
     #     [z velocity]
     X = problem.decision_variable(6, N)
+    if last_solve is not None:
+        X.set_value(last_solve[3].value())
 
     p = X[:3, :]
 
@@ -172,7 +174,7 @@ def add(
     if last_solve is None:
         omega[0, 0].set_value(-max_shooter_velocity / ball_diameter)
     else:
-        omega[0, 0].set_value(-math.sqrt(last_solve[0].value()[0][0])/ ball_diameter)
+        omega[0, 0].set_value(-math.sqrt(last_solve[0].value()[0][0]) / ball_diameter)
 
     # Dynamics constraints - RK4 integration
     h = dt
@@ -203,15 +205,9 @@ def add(
     # if last_solve is None:
     # Position initial guess is linear interpolation between start and end position
     for k in range(N):
-        p_x[k].set_value(
-            lerp(shooter_wrt_field[0, 0], target_wrt_field[0, 0], k / N)
-        )
-        p_y[k].set_value(
-            lerp(shooter_wrt_field[1, 0], target_wrt_field[1, 0], k / N)
-        )
-        p_z[k].set_value(
-            lerp(shooter_wrt_field[2, 0], target_wrt_field[2, 0], k / N)
-        )
+        p_x[k].set_value(lerp(shooter_wrt_field[0, 0], target_wrt_field[0, 0], k / N))
+        p_y[k].set_value(lerp(shooter_wrt_field[1, 0], target_wrt_field[1, 0], k / N))
+        p_z[k].set_value(lerp(shooter_wrt_field[2, 0], target_wrt_field[2, 0], k / N))
 
     # Velocity initial guess is max initial velocity toward target
     uvec_shooter_to_target = target_wrt_field[:3, :] - shooter_wrt_field[:3, :]
@@ -231,13 +227,17 @@ def add(
     pitch = atan2(
         v0_wrt_shooter[2, 0], hypot(v0_wrt_shooter[0, 0], v0_wrt_shooter[1, 0])
     )
-    problem.subject_to(pitch <= max_pitch)
+    if last_solve is None:
+        problem.subject_to(pitch <= max_pitch)
+    else:
+        problem.subject_to(pitch <= last_solve[1].value())
     problem.subject_to(pitch >= min_pitch)
 
     # Require initial velocity is less than max shooter velocity
     problem.subject_to(initial_velocity_squared <= max_shooter_velocity**2)
 
     return initial_velocity_squared, pitch, T, X
+
 
 if __name__ == "__main__":
     problem = Problem()
@@ -268,9 +268,17 @@ if __name__ == "__main__":
         exit(1)
 
     tof = T.value()
-    print(tof)
+    print(f"ToF: {tof} s")
+    print(
+        f"Min distance solve: speed={math.sqrt(min_distance_solve[0].value()[0][0]):.3f} m/s, "
+        f"pitch={np.rad2deg(min_distance_solve[1].value()):.2f} deg"
+    )
+    print(
+        f"Max distance solve: speed={math.sqrt(max_distance_solve[0].value()[0][0]):.3f} m/s, "
+        f"pitch={np.rad2deg(max_distance_solve[1].value()):.2f} deg"
+    )
 
-    samples = 19
+    samples = 45
     last_solve = min_distance_solve
     for i in range(1, samples):
         distance = lerp(min_distance, max_distance, i / samples)
@@ -278,19 +286,19 @@ if __name__ == "__main__":
         solve = add(problem, distance, target_height, last_solve)
         status = problem.solve(tolerance=1e-4)
         if status != ExitStatus.SUCCESS:
-            print("Warning: Failed to presolve")
+            print(f"Warning: Failed to presolve at distance {distance}")
         problem.subject_to(tof == solve[2])
         status = problem.solve(tolerance=1e-4)
         if status != ExitStatus.SUCCESS:
-            print("Failed to solve")
-            exit(1)
+            print(f"Failed to solve at distance {distance}")
+            continue
         solutions.insert(i, solve + (distance,))
         last_solve = solve
 
     # Print formatted table of results
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print(f"{'Distance (m)':>15} | {'Speed (m/s)':>15} | {'Pitch (deg)':>15}")
-    print("="*60)
+    print("=" * 60)
 
     for solution in solutions:
         speed = math.sqrt(solution[0].value()[0][0])
@@ -298,5 +306,4 @@ if __name__ == "__main__":
         distance = solution[4]
         print(f"{distance:>15.2f} | {speed:>15.3f} | {pitch:>15.2f}")
 
-    print("="*60)
-
+    print("=" * 60)

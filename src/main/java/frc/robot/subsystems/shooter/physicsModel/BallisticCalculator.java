@@ -1,10 +1,13 @@
+// Copyright (c) DrumTurret project contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the BSD license file in the root of this project.
+
 package frc.robot.subsystems.shooter.physicsModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public final class BallisticCalculator {
-
   private static final double GRAVITY = 9.81;
   private static final double AIR_DENSITY = 1.225;
 
@@ -20,7 +23,6 @@ public final class BallisticCalculator {
       double mass,
       double radius,
       double Cd) {
-
     double dt = 0.001;
 
     double area = Math.PI * radius * radius;
@@ -37,7 +39,6 @@ public final class BallisticCalculator {
 
     int iterations = 0;
     while (y > 0.0 && time < 10.0) {
-
       double v = Math.hypot(vx, vy);
 
       double ax = 0.0;

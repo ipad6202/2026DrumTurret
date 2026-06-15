@@ -1,3 +1,7 @@
+// Copyright (c) DrumTurret project contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the BSD license file in the root of this project.
+
 package frc.robot.subsystems.shooter.flywheel;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -5,15 +9,11 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.shooter.physicsModel.BallisticCalculator;
-
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Flywheel extends SubsystemBase {
-
   private final FlywheelIO io;
   private FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 
