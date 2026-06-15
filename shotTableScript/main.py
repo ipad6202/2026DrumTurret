@@ -15,6 +15,7 @@ Required packages:
 - sleipnirgroup-jormungandr
 """
 
+import json
 import math
 
 import numpy as np
@@ -239,7 +240,7 @@ def add(
     return initial_velocity_squared, pitch, T, X
 
 
-if __name__ == "__main__":
+def write(name, target_height, min_distance, max_distance, samples):
     problem = Problem()
 
     solutions = []
@@ -249,9 +250,6 @@ if __name__ == "__main__":
     T.set_value(1)
     problem.minimize(T)
 
-    target_height = 72 * 0.0254
-    min_distance = 1
-    max_distance = 10.5
     min_distance_solve = add(problem, min_distance, target_height, None)
     max_distance_solve = add(problem, max_distance, target_height, None)
     solutions.append(min_distance_solve + (min_distance,))
@@ -262,7 +260,7 @@ if __name__ == "__main__":
         exit(1)
     problem.subject_to(T == min_distance_solve[2])
     problem.subject_to(T == max_distance_solve[2])
-    status = problem.solve(tolerance=1e-4)
+    status = problem.solve(tolerance=1e-8)
     if status != ExitStatus.SUCCESS:
         print("Failed to solve ToF")
         exit(1)
@@ -278,7 +276,6 @@ if __name__ == "__main__":
         f"pitch={np.rad2deg(max_distance_solve[1].value()):.2f} deg"
     )
 
-    samples = 45
     last_solve = min_distance_solve
     failed_solves = 0
     for i in range(1, samples):
@@ -289,7 +286,7 @@ if __name__ == "__main__":
         if status != ExitStatus.SUCCESS:
             print(f"Warning: Failed to presolve at distance {distance}")
         problem.subject_to(tof == solve[2])
-        status = problem.solve(tolerance=1e-4)
+        status = problem.solve(tolerance=1e-8)
         if status != ExitStatus.SUCCESS:
             print(f"Failed to solve at distance {distance}")
             failed_solves += 1
@@ -309,3 +306,28 @@ if __name__ == "__main__":
         print(f"{distance:>15.2f} | {speed:>15.3f} | {pitch:>15.2f}")
 
     print("=" * 60)
+
+    print("Writing to file")
+
+    output_solutions = {}
+    for solution in solutions:
+        output_solutions[solution[4]] = {
+            "speed": math.sqrt(solution[0].value()[0][0]),
+            "pitch": np.rad2deg(solution[1].value()),
+        }
+    json.dump(
+        {"tof": tof, "solutions": output_solutions},
+        open(f"../src/main/deploy/{name}.json", "w"),
+        indent=2,
+    )
+
+
+if __name__ == "__main__":
+    write(
+        "HubShotMap",
+        72 * 0.0254,
+        1.275,
+        (math.hypot(317.7 / 2, 158.6 + 47 / 2) * 0.0254 + 14.4 / 3.281 * 1.694),
+        45,
+    )
+    write("GroundShotMap", 0, 1.55, 16, 45)
