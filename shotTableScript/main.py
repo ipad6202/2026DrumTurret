@@ -280,6 +280,7 @@ if __name__ == "__main__":
 
     samples = 45
     last_solve = min_distance_solve
+    failed_solves = 0
     for i in range(1, samples):
         distance = lerp(min_distance, max_distance, i / samples)
         problem = Problem()
@@ -291,8 +292,9 @@ if __name__ == "__main__":
         status = problem.solve(tolerance=1e-4)
         if status != ExitStatus.SUCCESS:
             print(f"Failed to solve at distance {distance}")
+            failed_solves += 1
             continue
-        solutions.insert(i, solve + (distance,))
+        solutions.insert(i - failed_solves, solve + (distance,))
         last_solve = solve
 
     # Print formatted table of results
