@@ -1,0 +1,7 @@
+[project]
+name = "2026drumturret"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "sleipnirgroup-jormungandr==0.6.2.dev4",
+]

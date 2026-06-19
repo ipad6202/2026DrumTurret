@@ -1,3 +1,7 @@
+// Copyright (c) DrumTurret project contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the BSD license file in the root of this project.
+
 package frc.robot.subsystems.rollers;
 
 import edu.wpi.first.units.measure.Angle;
@@ -8,7 +12,6 @@ import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface RollerSystemIO {
-
   @AutoLog
   public static class RollerSystemIOInputs {
     public boolean connected;

@@ -1,16 +1,22 @@
+import com.diffplug.spotless.LineEnding
+
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
-    id "com.peterabeles.gversion" version "1.10"
-    id "com.diffplug.spotless" version "6.12.0"
+    id "com.peterabeles.gversion" version "1.10.3"
+    id "com.diffplug.spotless" version "8.1.0"
+    id "idea"
 }
+
+apply plugin: 'java'
+compileJava {options.encoding = "UTF-8"}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-def ROBOT_MAIN_CLASS = "frc.robot.Main"
+def ROBOT_MAIN_CLASS = "frc.cotc.Main"
 
 // Define my targets (RoboRIO) and artifacts (deployable files)
 // This is added by GradleRIO's backing project DeployUtils.
@@ -30,25 +36,22 @@ deploy {
 
                 frcJava(getArtifactTypeClass('FRCJavaArtifact')) {
                     jvmArgs.add("-XX:+UnlockExperimentalVMOptions")
-                    jvmArgs.add("-XX:GCTimeRatio=5")
+                    jvmArgs.add("-XX:GCTimeRatio=4")
                     jvmArgs.add("-XX:+UseSerialGC")
-                    jvmArgs.add("-XX:MaxGCPauseMillis=50")
+                    jvmArgs.add("-XX:MaxGCPauseMillis=15")
 
-                    // The options below may improve performance, but should only be enabled on the RIO 2
-                    //
-                    // final MAX_JAVA_HEAP_SIZE_MB = 100;
-                    // jvmArgs.add("-Xmx" + MAX_JAVA_HEAP_SIZE_MB + "M")
-                    // jvmArgs.add("-Xms" + MAX_JAVA_HEAP_SIZE_MB + "M")
-                    // jvmArgs.add("-XX:+AlwaysPreTouch")
+                    final MAX_JAVA_HEAP_SIZE_MB = 100
+                    jvmArgs.add("-Xmx" + MAX_JAVA_HEAP_SIZE_MB + "M")
+                    jvmArgs.add("-Xms" + MAX_JAVA_HEAP_SIZE_MB + "M")
+                    jvmArgs.add("-XX:+AlwaysPreTouch")
                 }
 
                 // Static files artifact
                 frcStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
                     files = project.fileTree('src/main/deploy')
                     directory = '/home/lvuser/deploy'
-                    // Change to true to delete files on roboRIO that no
-                    // longer exist in deploy directory on roboRIO
-                    deleteOldFiles = false
+                    deleteOldFiles = false // Change to true to delete files on roboRIO that no
+                    // longer exist in deploy directory of this project
                 }
             }
         }
@@ -64,14 +67,8 @@ wpi.java.debugJni = false
 // Set this to true to enable desktop support.
 def includeDesktopSupport = true
 
-// Configuration for AdvantageKit
-task(replayWatch, type: JavaExec) {
-    mainClass = "org.littletonrobotics.junction.ReplayWatch"
-    classpath = sourceSets.main.runtimeClasspath
-}
-
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
-// Also defines JUnit 4.
+// Also defines JUnit 5.
 dependencies {
     annotationProcessor wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
@@ -98,25 +95,64 @@ dependencies {
     annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
 }
 
+idea {
+    project {
+        // The project.sourceCompatibility setting is not always picked up, so we set explicitly
+        languageLevel = JavaVersion.VERSION_17
+    }
+    module {
+        // Improve development & (especially) debugging experience (and IDEA's capabilities) by having libraries' source & javadoc attached
+        downloadJavadoc = true
+        downloadSources = true
+        // Exclude the following from indexing and search
+        excludeDirs+=file(".run" )
+        excludeDirs+=file(".vscode" )
+    }
+}
+
+task(replayWatch, type: JavaExec) {
+    mainClass = "org.littletonrobotics.junction.ReplayWatch"
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+simulateJavaRelease {
+    if (project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("simulate") })) {
+        project.logger.lifecycle('Checking if replay mode...')
+        if (frc.project.hasProperty("replay")) {
+            project.logger.lifecycle('Replay mode activated!')
+            args '--replay'
+            wpi.sim.addGui().defaultEnabled = false
+        } else {
+            wpi.sim.addGui().defaultEnabled = true
+        }
+    } else {
+        project.logger.lifecycle('Not a simulation, skipping replay check')
+    }
+}
+
 test {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    testLogging {
+        exceptionFormat = "full"
+    }
 }
 
 // Simulation configuration (e.g. environment variables).
-//
-// The sim GUI is *disabled* by default to support running
-// AdvantageKit log replay, which requires that all HAL
-// sim extensions be disabled.
-wpi.sim.addGui().defaultEnabled = false
 wpi.sim.addDriverstation()
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
 // knows where to look for our Robot Class.
 jar {
-    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-    from sourceSets.main.allSource
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    from('src') { into 'backup/src' }
+    from('vendordeps') { into 'backup/vendordeps' }
+    from('build.gradle') { into 'backup' }
     manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
@@ -138,7 +174,7 @@ gversion {
     classPackage = "frc.robot"
     className    = "BuildConstants"
     dateFormat   = "yyyy-MM-dd HH:mm:ss z"
-    timeZone     = "America/New_York"
+    timeZone     = "UTC" // Use preferred time zone
     indent       = "  "
 }
 
@@ -174,19 +210,22 @@ task(eventDeploy) {
     }
 }
 createVersionFile.dependsOn(eventDeploy)
+eventDeploy.dependsOn(spotlessApply)
 
 // Spotless formatting
 project.compileJava.dependsOn(spotlessApply)
 spotless {
+    lineEndings(LineEnding.UNIX)
     java {
         target fileTree(".") {
             include "**/*.java"
-            exclude "**/build/**", "**/build-*/**"
+            exclude "**/build/**", "**/build-*/**", "**/BuildConstants.java",
+                    "**/ChoreoTraj.java", "**/ChoreoVars.java"
         }
-        toggleOffOn()
         googleJavaFormat()
         removeUnusedImports()
         trimTrailingWhitespace()
+        licenseHeader(rootProject.file('.wpiformat-license').text + "\n")
         endWithNewline()
     }
     groovyGradle {
@@ -195,14 +234,14 @@ spotless {
             exclude "**/build/**", "**/build-*/**"
         }
         greclipse()
-        indentWithSpaces(4)
+        leadingTabsToSpaces(4)
         trimTrailingWhitespace()
         endWithNewline()
     }
     json {
         target fileTree(".") {
             include "**/*.json"
-            exclude "**/build/**", "**/build-*/**", ".wpilib/**"
+            exclude "**/build/**", "**/build-*/**", "ascope_assets/**"
         }
         gson().indentWithSpaces(2)
     }
@@ -212,7 +251,17 @@ spotless {
             exclude "**/build/**", "**/build-*/**"
         }
         trimTrailingWhitespace()
-        indentWithSpaces(2)
+        leadingTabsToSpaces(2)
         endWithNewline()
+    }
+}
+
+if (hasProperty('compilerArgs')) {
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            compilerArgs.split().each { arg ->
+                options.compilerArgs << arg
+            }
+        }
     }
 }
