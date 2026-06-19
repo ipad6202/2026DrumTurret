@@ -114,14 +114,17 @@ public class Shooter extends SubsystemBase {
     var height = 0.0; // TODO: Get height from lifter subsystem
 
     var timeOfFlight = shotMap.getTimeOfFlight(height);
+    var virtualToF =
+        (1 - Math.exp(-linearDragCoefficientInverseSeconds * timeOfFlight))
+            / linearDragCoefficientInverseSeconds;
 
     var virtualRobotTranslation =
         robotPose
             .getTranslation()
             .plus(
                 new Translation2d(
-                    drivetrainSpeeds.vxMetersPerSecond * timeOfFlight,
-                    drivetrainSpeeds.vyMetersPerSecond * timeOfFlight));
+                    drivetrainSpeeds.vxMetersPerSecond * virtualToF,
+                    drivetrainSpeeds.vyMetersPerSecond * virtualToF));
 
     var virtualRobotToTarget = target.minus(virtualRobotTranslation);
     var aimAngleAbsolute = virtualRobotToTarget.getAngle();
