@@ -8,12 +8,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.wpilibj.Filesystem;
 import java.io.File;
 import java.util.Map;
+import java.util.TreeMap;
 
-public class ShotMap extends InterpolatingTreeMap<Double, ShotMap.ShotResult> {
+public class ShotMap {
   public static ShotMap loadFromDeploy(String filePath) {
     try {
       System.out.println(
@@ -30,14 +32,52 @@ public class ShotMap extends InterpolatingTreeMap<Double, ShotMap.ShotResult> {
     }
   }
 
-  public final double timeOfFlight;
+  private final TreeMap<Double, ShotMapEntry> map;
+  private final InterpolatingDoubleTreeMap timeOfFlightMap = new InterpolatingDoubleTreeMap();
 
-  public ShotMap(
-      @JsonProperty("tof") double timeOfFlight,
-      @JsonProperty("solutions") Map<Double, ShotResult> solutions) {
-    super(MathUtil::inverseInterpolate, ShotResult::interpolate);
-    this.timeOfFlight = timeOfFlight;
-    solutions.forEach(this::put);
+  public ShotMap(@JsonProperty("map") TreeMap<Double, ShotMapEntry> map) {
+    this.map = map;
+    map.forEach((k, v) -> timeOfFlightMap.put(k, v.timeOfFlight));
+  }
+
+  public ShotResult get(Double height, Double distance) {
+    var val = map.get(height);
+    if (val == null) {
+      var ceilingKey = map.ceilingKey(height);
+      var floorKey = map.floorKey(height);
+
+      if (ceilingKey == null && floorKey == null) {
+        return null;
+      }
+      if (ceilingKey == null) {
+        return map.get(floorKey).get(distance);
+      }
+      if (floorKey == null) {
+        return map.get(ceilingKey).get(distance);
+      }
+      var floor = map.get(floorKey).get(distance);
+      var ceiling = map.get(ceilingKey).get(distance);
+
+      return floor.interpolate(ceiling, distance);
+    } else {
+      return val.get(distance);
+    }
+  }
+
+  public double getTimeOfFlight(double height) {
+    return timeOfFlightMap.get(height);
+  }
+
+  public static class ShotMapEntry extends InterpolatingTreeMap<Double, ShotResult> {
+    final double timeOfFlight;
+
+    public ShotMapEntry(
+        @JsonProperty("tof") double timeOfFlight,
+        @JsonProperty("solutions") Map<Double, ShotResult> solutions) {
+      super(MathUtil::inverseInterpolate, ShotResult::interpolate);
+      this.timeOfFlight = timeOfFlight;
+      solutions.forEach(this::put);
+    }
   }
 
   public record ShotResult(

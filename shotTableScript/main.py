@@ -24,13 +24,13 @@ from sleipnir.autodiff import VariableMatrix, atan2, block, cos, hypot, sin, sqr
 from sleipnir.optimization import ExitStatus, Problem
 
 # Physical characteristics
-shooter_height = 18 * 0.0254  # m
 min_pitch = np.deg2rad(90 - 45)  # rad
 max_pitch = np.deg2rad(90 - 5)  # rad
 g = np.array([[0], [0], [9.81]])  # m/s²
 max_shooter_velocity = 14.5  # m/s
 ball_mass = 0.5 / 2.205  # kg
 ball_diameter = 5.91 * 0.0254  # m
+ball_moment_of_inertia = 0.4 * ball_mass * (ball_diameter / 2) ** 2  # kg m²
 
 
 # Solve settings
@@ -94,6 +94,7 @@ N = 40
 def add(
     problem,
     distance,
+    shooter_height,
     target_height,
     last_solve=None,
 ):
@@ -240,7 +241,8 @@ def add(
     return initial_velocity_squared, pitch, T, X
 
 
-def write(name, target_height, min_distance, max_distance, samples):
+def calculate_height(shooter_height, target_height, min_distance, max_distance, samples):
+    print(f"Solving shooter height {shooter_height:.2f} m, target height {target_height:.2f} m")
     problem = Problem()
 
     solutions = []
@@ -250,20 +252,19 @@ def write(name, target_height, min_distance, max_distance, samples):
     T.set_value(1)
     problem.minimize(T)
 
-    min_distance_solve = add(problem, min_distance, target_height, None)
-    max_distance_solve = add(problem, max_distance, target_height, None)
+    min_distance_solve = add(problem, min_distance, shooter_height, target_height, None)
+    max_distance_solve = add(problem, max_distance, shooter_height, target_height, None)
     solutions.append(min_distance_solve + (min_distance,))
     solutions.append(max_distance_solve + (max_distance,))
     status = problem.solve(tolerance=1e-4)
     if status != ExitStatus.SUCCESS:
-        print("Failed to presolve ToF")
-        exit(1)
+        print("Failed to presolve ToF at shooter height")
     problem.subject_to(T == min_distance_solve[2])
     problem.subject_to(T == max_distance_solve[2])
     status = problem.solve(tolerance=1e-8)
     if status != ExitStatus.SUCCESS:
         print("Failed to solve ToF")
-        exit(1)
+        return None
 
     tof = T.value()
     print(f"ToF: {tof} s")
@@ -281,7 +282,7 @@ def write(name, target_height, min_distance, max_distance, samples):
     for i in range(1, samples):
         distance = lerp(min_distance, max_distance, i / samples)
         problem = Problem()
-        solve = add(problem, distance, target_height, last_solve)
+        solve = add(problem, distance, shooter_height, target_height, last_solve)
         status = problem.solve(tolerance=1e-4)
         if status != ExitStatus.SUCCESS:
             print(f"Warning: Failed to presolve at distance {distance}")
@@ -315,11 +316,24 @@ def write(name, target_height, min_distance, max_distance, samples):
             "speed": math.sqrt(solution[0].value()[0][0]),
             "pitch": np.rad2deg(solution[1].value()),
         }
-    json.dump(
-        {"tof": tof, "solutions": output_solutions},
-        open(f"../src/main/deploy/{name}.json", "w"),
-        indent=2,
-    )
+
+    return {"tof": tof, "solutions": output_solutions}
+
+min_height = 15 * 0.0254
+max_height = 25 * 0.0254
+height_samples = 11
+
+def write(name, target_height, min_distance, max_distance):
+    results = {}
+    for i in range(height_samples):
+        shooter_height = lerp(min_height, max_height, i / (height_samples - 1))
+        result = calculate_height(shooter_height, target_height, min_distance,
+                                                   max_distance, 45)
+        if result is None:
+            continue
+        results[shooter_height] = result
+    with open(f"../src/main/deploy/{name}.json", "w") as file:
+        json.dump({"map" : results}, file, indent=2)
 
 
 if __name__ == "__main__":
@@ -327,7 +341,6 @@ if __name__ == "__main__":
         "HubShotMap",
         72 * 0.0254,
         1.275,
-        (math.hypot(317.7 / 2, 158.6 + 47 / 2) * 0.0254 + 14.4 / 3.281 * 1.694),
-        45,
+        (math.hypot(317.7 / 2, 158.6 + 47 / 2) * 0.0254 + 14.4 / 3.281 * 1.694)
     )
-    write("GroundShotMap", 0, 1.55, 16, 45)
+    write("GroundShotMap", 0, 2, 16)

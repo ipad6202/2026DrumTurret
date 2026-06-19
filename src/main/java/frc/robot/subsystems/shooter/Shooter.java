@@ -6,6 +6,7 @@ package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -32,8 +33,7 @@ public class Shooter extends SubsystemBase {
           BLUE_RIGHT_GROUND_TARGET.getY());
   private static final Translation2d RED_RIGHT_GROUND_TARGET =
       new Translation2d(
-          RED_LEFT_GROUND_TARGET.getX(),
-          FieldConstants.fieldWidth - RED_LEFT_GROUND_TARGET.getY());
+          RED_LEFT_GROUND_TARGET.getX(), FieldConstants.fieldWidth - RED_LEFT_GROUND_TARGET.getY());
 
   public enum ShotTarget {
     BLUE_HUB(hubShotMap, FieldConstants.Hub.topCenterPoint.toTranslation2d()),
@@ -57,13 +57,20 @@ public class Shooter extends SubsystemBase {
 
   private final TurretIO turretIO;
 
+  private final InterpolatingDoubleTreeMap shotSpeedToFlywheelSpeedMap =
+      new InterpolatingDoubleTreeMap();
+
   public Shooter(
-    TurretIO turretIO,
-      Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> drivetrainSpeedsSupplier) {
+      TurretIO turretIO,
+      Supplier<Pose2d> robotPoseSupplier,
+      Supplier<ChassisSpeeds> drivetrainSpeedsSupplier) {
     this.turretIO = turretIO;
 
     this.robotPoseSupplier = robotPoseSupplier;
     this.drivetrainSpeedsSupplier = drivetrainSpeedsSupplier;
+
+    // TODO: Figure out shot speed -> flywheel speed mapping
+    shotSpeedToFlywheelSpeedMap.put(0.0, 0.0);
   }
 
   public Command shootHub() {
@@ -94,7 +101,7 @@ public class Shooter extends SubsystemBase {
                 Robot.isOnRed()
                     ? ShotTarget.RED_RIGHT_GROUND.targetLocation
                     : ShotTarget.BLUE_LEFT_GROUND.targetLocation,
-                hubShotMap);
+                groundShotMap);
           }
         });
   }
@@ -102,21 +109,31 @@ public class Shooter extends SubsystemBase {
   private void shoot(Pose2d robotPose, Translation2d target, ShotMap shotMap) {
     var drivetrainSpeeds = drivetrainSpeedsSupplier.get();
 
+    var height = 0.0; // TODO: Get height from lifter subsystem
+
+    var timeOfFlight = shotMap.getTimeOfFlight(height);
+
     var virtualRobotTranslation =
         robotPose
             .getTranslation()
             .plus(
                 new Translation2d(
-                    drivetrainSpeeds.vxMetersPerSecond * shotMap.timeOfFlight,
-                    drivetrainSpeeds.vyMetersPerSecond * shotMap.timeOfFlight));
+                    drivetrainSpeeds.vxMetersPerSecond * timeOfFlight,
+                    drivetrainSpeeds.vyMetersPerSecond * timeOfFlight));
 
     var virtualRobotToTarget = target.minus(virtualRobotTranslation);
     var aimAngleAbsolute = virtualRobotToTarget.getAngle();
     var aimAngleRelative = aimAngleAbsolute.minus(robotPose.getRotation());
     var shotDistance = virtualRobotToTarget.getNorm();
 
-    var shotParameters = shotMap.get(shotDistance);
+    var shotParameters = shotMap.get(height, shotDistance);
 
     // TODO: Actually run the shooter system
+    var flywheelSpeedRotPerSec =
+        shotSpeedToFlywheelSpeedMap.get(shotParameters.speedMetersPerSec());
+    var hoodPitchRad = shotParameters.pitchRad();
+
+    // TODO: Add unwrapping logic if needed
+    turretIO.run(aimAngleRelative.getRadians(), -drivetrainSpeeds.omegaRadiansPerSecond);
   }
 }

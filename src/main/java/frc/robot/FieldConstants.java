@@ -1,3 +1,7 @@
+// Copyright (c) DrumTurret project contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the BSD license file in the root of this project.
+
 package frc.robot;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -15,8 +19,8 @@ import edu.wpi.first.math.util.Units;
  */
 public class FieldConstants {
   public static AprilTagFieldLayout tagLayout =
-    AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
-  
+      AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
+
   // AprilTag related constants
   public static final int aprilTagCount = tagLayout.getTags().size();
   public static final double aprilTagWidth = Units.inchesToMeters(6.5);
@@ -33,17 +37,14 @@ public class FieldConstants {
    */
   public static class LinesVertical {
     public static final double center = fieldLength / 2.0;
-    public static final double starting =
-        tagLayout.getTagPose(26).get().getX();
+    public static final double starting = tagLayout.getTagPose(26).get().getX();
     public static final double allianceZone = starting;
-    public static final double hubCenter =
-        tagLayout.getTagPose(26).get().getX() + Hub.width / 2.0;
+    public static final double hubCenter = tagLayout.getTagPose(26).get().getX() + Hub.width / 2.0;
     public static final double neutralZoneNear = center - Units.inchesToMeters(120);
     public static final double neutralZoneFar = center + Units.inchesToMeters(120);
     public static final double oppHubCenter =
         tagLayout.getTagPose(4).get().getX() + Hub.width / 2.0;
-    public static final double oppAllianceZone =
-        tagLayout.getTagPose(10).get().getX();
+    public static final double oppAllianceZone = tagLayout.getTagPose(10).get().getX();
   }
 
   /**
@@ -53,7 +54,6 @@ public class FieldConstants {
    * alliance station
    */
   public static class LinesHorizontal {
-
     public static final double center = fieldWidth / 2.0;
 
     // Right of hub
@@ -73,7 +73,6 @@ public class FieldConstants {
 
   /** Hub related constants */
   public static class Hub {
-
     // Dimensions
     public static final double width = Units.inchesToMeters(47.0);
     public static final double height =
@@ -84,14 +83,10 @@ public class FieldConstants {
     // Relevant reference points on alliance side
     public static final Translation3d topCenterPoint =
         new Translation3d(
-            tagLayout.getTagPose(26).get().getX() + width / 2.0,
-            fieldWidth / 2.0,
-            height);
+            tagLayout.getTagPose(26).get().getX() + width / 2.0, fieldWidth / 2.0, height);
     public static final Translation3d innerCenterPoint =
         new Translation3d(
-            tagLayout.getTagPose(26).get().getX() + width / 2.0,
-            fieldWidth / 2.0,
-            innerHeight);
+            tagLayout.getTagPose(26).get().getX() + width / 2.0, fieldWidth / 2.0, innerHeight);
 
     public static final Translation2d nearLeftCorner =
         new Translation2d(topCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 + width / 2.0);
@@ -105,9 +100,7 @@ public class FieldConstants {
     // Relevant reference points on the opposite side
     public static final Translation3d oppTopCenterPoint =
         new Translation3d(
-            tagLayout.getTagPose(4).get().getX() + width / 2.0,
-            fieldWidth / 2.0,
-            height);
+            tagLayout.getTagPose(4).get().getX() + width / 2.0, fieldWidth / 2.0, height);
     public static final Translation2d oppNearLeftCorner =
         new Translation2d(oppTopCenterPoint.getX() - width / 2.0, fieldWidth / 2.0 + width / 2.0);
     public static final Translation2d oppNearRightCorner =
@@ -118,14 +111,10 @@ public class FieldConstants {
         new Translation2d(oppTopCenterPoint.getX() + width / 2.0, fieldWidth / 2.0 - width / 2.0);
 
     // Hub faces
-    public static final Pose2d nearFace =
-        tagLayout.getTagPose(26).get().toPose2d();
-    public static final Pose2d farFace =
-        tagLayout.getTagPose(20).get().toPose2d();
-    public static final Pose2d rightFace =
-        tagLayout.getTagPose(18).get().toPose2d();
-    public static final Pose2d leftFace =
-        tagLayout.getTagPose(21).get().toPose2d();
+    public static final Pose2d nearFace = tagLayout.getTagPose(26).get().toPose2d();
+    public static final Pose2d farFace = tagLayout.getTagPose(20).get().toPose2d();
+    public static final Pose2d rightFace = tagLayout.getTagPose(18).get().toPose2d();
+    public static final Pose2d leftFace = tagLayout.getTagPose(21).get().toPose2d();
   }
 
   /** Left Bump related constants */
@@ -203,7 +192,6 @@ public class FieldConstants {
   }
 
   public static class RightTrench {
-
     // Dimensions
     public static final double width = Units.inchesToMeters(65.65);
     public static final double depth = Units.inchesToMeters(47.0);
@@ -258,8 +246,7 @@ public class FieldConstants {
 
     // Relevant reference points on opposing side
     public static final Translation2d oppCenterPoint =
-        new Translation2d(
-            fieldLength - frontFaceX, tagLayout.getTagPose(15).get().getY());
+        new Translation2d(fieldLength - frontFaceX, tagLayout.getTagPose(15).get().getY());
     public static final Translation2d oppLeftUpright =
         new Translation2d(
             fieldLength - frontFaceX,

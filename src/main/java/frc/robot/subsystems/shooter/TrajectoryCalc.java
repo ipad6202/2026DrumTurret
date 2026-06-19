@@ -1,3 +1,7 @@
+// Copyright (c) DrumTurret project contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the BSD license file in the root of this project.
+
 package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.VecBuilder;
@@ -44,6 +48,7 @@ public class TrajectoryCalc {
 
     // Magnus force formula
     // Kinda sus since the internet can't seem to agree on a formula but this seems to be a good one
+    // Modification of the quadratic drag formula
     //   F_M(v) = ½ρvAC_L (v̂ × ω)
     //   C_L is the lift coefficient (dimensionless)
     var C_L = 0.00025;
