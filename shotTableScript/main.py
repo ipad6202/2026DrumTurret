@@ -314,7 +314,7 @@ def calculate_height(shooter_height, target_height, min_distance, max_distance, 
     for solution in solutions:
         output_solutions[solution[4]] = {
             "speed": math.sqrt(solution[0].value()[0][0]),
-            "pitch": np.rad2deg(solution[1].value()),
+            "pitch": solution[1].value(),
         }
 
     return {"tof": tof, "solutions": output_solutions}

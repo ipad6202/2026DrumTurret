@@ -60,6 +60,8 @@ public class Shooter extends SubsystemBase {
   private final InterpolatingDoubleTreeMap shotSpeedToFlywheelSpeedMap =
       new InterpolatingDoubleTreeMap();
 
+  private final double linearDragCoefficientInverseSeconds = 0.1;
+
   public Shooter(
       TurretIO turretIO,
       Supplier<Pose2d> robotPoseSupplier,
